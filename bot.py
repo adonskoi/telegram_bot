@@ -15,3 +15,6 @@ def send_welcome(message):
 @bot.message_handler(content_types=['voice'])
 def save_voice_message(message):
     bot.reply_to(message, "This is voice!")
+
+
+bot.polling()
