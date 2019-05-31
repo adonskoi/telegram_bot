@@ -1,4 +1,5 @@
 import os
+import logging
 import requests
 from pymongo import MongoClient
 import telebot
@@ -8,6 +9,9 @@ DB = os.environ['BOT_DB']
 bot = telebot.TeleBot(API_TOKEN)
 client = MongoClient(DB)
 db = client.bot_db
+
+logger = telebot.logger
+telebot.logger.setLevel(logging.DEBUG)
 
 
 @bot.message_handler(commands=['start'])
@@ -36,16 +40,21 @@ def get_list_files_contoller(message):
 
 @bot.message_handler(commands=['get_file'])
 def get_file_contoller(message):
-    id = message.text.split(' ')[1]
     user_id = message.from_user.id
     chat_id = message.chat.id
-    file = db.files.find_one({"user_id": user_id, "id": int(id)})
     try:
-        file_path = file['path']
-        voice = open(file_path, 'rb')
-        bot.send_voice(chat_id, voice)
-    except:
-        text = 'File not found'
+        id = message.text.split(' ')[1]
+        file = db.files.find_one({"user_id": user_id, "id": int(id)})
+        if file is not None:
+            file_path = file['path']
+            voice = open(file_path, 'rb')
+            bot.send_voice(chat_id, voice)
+        else:
+            text = 'File not found'
+            bot.send_message(user_id, text)
+    except IndexError:
+        print(IndexError)
+        text = 'Please specify file id'
         bot.send_message(user_id, text)
 
 
